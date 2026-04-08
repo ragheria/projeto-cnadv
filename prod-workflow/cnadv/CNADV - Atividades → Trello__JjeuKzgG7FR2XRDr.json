@@ -1,0 +1,807 @@
+{
+  "updatedAt": "2026-04-08T20:46:03.935Z",
+  "createdAt": "2026-03-19T01:16:54.285Z",
+  "id": "JjeuKzgG7FR2XRDr",
+  "name": "CNADV - Atividades → Trello",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "path": "datajuri-explorer",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "479578df-8740-4ad7-9d78-db3900c1a22f",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1760,
+        -64
+      ],
+      "webhookId": "datajuri-explorer"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "4vMm6qr8IQhUy67J",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/4vMm6qr8IQhUy67J",
+          "cachedResultName": "NNADV - Auth DataJuri"
+        },
+        "options": {}
+      },
+      "id": "7b5004b9-fbe4-41aa-84f8-b58ef7c03ba3",
+      "name": "Busca Token",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [
+        -1520,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.datajuri.com.br/v1/modulos",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('Prepara Contexto').first().json.bearer }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "01e109cd-c405-4269-9bef-5f1a4d28f2e3",
+      "name": "GET Módulos",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1024,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const token = $input.first().json.bearer;\nif (!token) throw new Error('Token não encontrado');\n\n// Pega parâmetros do webhook (modo de operação)\nconst body = $('Webhook').first().json.body || {};\nconst modo = body.modo || 'modulos'; // modulos | campos | dados | tudo\nconst modulo = body.modulo || null;\nconst page = body.page || 0;\nconst pageSize = body.pageSize || 20;\nconst criterio = body.criterio || null;\n\nreturn [{ json: { bearer: token, modo, modulo, page, pageSize, criterio } }];"
+      },
+      "id": "afc0898c-2c6f-473a-87cb-af7916d0e24c",
+      "name": "Prepara Contexto",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1280,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 30
+            }
+          ]
+        }
+      },
+      "id": "3499107e-b0db-4044-b4e6-d20429903d71",
+      "name": "A cada 30 minutos",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -496,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.datajuri.com.br/v1/entidades/Atividade",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "campos",
+              "value": "id,assunto,data,dataPrazoFatal,hora,observacao,proprietario.nome,proprietarioId,processo.pasta,processoId,pessoa.nome,pessoaId"
+            },
+            {
+              "name": "criterio",
+              "value": "=dataPrazoFatal | maior ou igual | {{ $json.hoje }}"
+            },
+            {
+              "name": "pageSize",
+              "value": "100"
+            },
+            {
+              "name": "page",
+              "value": "0"
+            },
+            {
+              "name": "removerHtml",
+              "value": "true"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $json.bearer }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "948f1f3e-f13a-4c9a-a621-504f96fd9fbf",
+      "name": "GET Atividades",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extrai registros da estrutura real: [{ rows: [...], listSize, modulo }]\nconst response = $input.first().json;\nlet registros = [];\n\nif (Array.isArray(response) && response[0]?.rows) {\n  registros = response[0].rows;\n} else if (response.rows) {\n  registros = response.rows;\n} else if (Array.isArray(response)) {\n  registros = response;\n}\n\nconsole.log(`${registros.length} atividades encontradas`);\nreturn registros.map(r => ({ json: r }));"
+      },
+      "id": "1f2e7e20-868a-473e-b2f4-2e4a60797ad8",
+      "name": "Extrai Registros",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        464,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Deduplicação pelo ID numérico — único e estável\nconst staticData = $getWorkflowStaticData('global');\nif (!staticData.idsProcessados) staticData.idsProcessados = [];\n\n// Mantém últimos 3000 IDs\nif (staticData.idsProcessados.length > 3000) {\n  staticData.idsProcessados = staticData.idsProcessados.slice(-3000);\n}\n\nconst itens = $input.all();\nconst novos = [];\n\nfor (const item of itens) {\n  const id = String(item.json.id);\n  if (!id || id === 'undefined') { novos.push(item); continue; }\n  if (!staticData.idsProcessados.includes(id)) {\n    staticData.idsProcessados.push(id);\n    novos.push(item);\n  }\n}\n\nconsole.log(`${novos.length} novas de ${itens.length} total`);\nreturn novos.length > 0 ? novos : [];"
+      },
+      "id": "2f886818-a973-4253-98f5-2d8fb41e8731",
+      "name": "Deduplicação",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        704,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const r = $input.first().json;\n\n// --- TIPO pelo prefixo do assunto ---\n// Exemplos reais: 'PRZ - ...', 'PTE - ...', 'PRE - ...', 'SOLIC - ...'\nconst assunto = r.assunto || '';\nconst prefixo = assunto.split(' - ')[0].trim();\n\nconst tipoMap = {\n  'PRZ': { emoji: '⏰', label: 'Prazo', cor: 'red' },\n  'PTE': { emoji: '📤', label: 'Protocolo', cor: 'blue' },\n  'PRE': { emoji: '🚫', label: 'Renúncia', cor: 'orange' },\n  'SOLIC': { emoji: '📋', label: 'Solicitação', cor: 'yellow' },\n  'AUD': { emoji: '⚖️', label: 'Audiência', cor: 'purple' },\n  'REU': { emoji: '🤝', label: 'Reunião', cor: 'green' }\n};\nconst tipo = tipoMap[prefixo] || { emoji: '📌', label: 'Atividade', cor: 'blue' };\n\n// --- TÍTULO ---\n// Usa o assunto completo (já tem o processo no PRZ: \"PRZ - 0005308-... - PROMOTEC - ...\")\nconst titulo = `${tipo.emoji} ${assunto}`.substring(0, 255);\n\n// --- LIMPEZA da observação (ainda tem HTML residual) ---\nconst obsRaw = r.observacao || '';\nconst obsLimpa = obsRaw\n  .replace(/<[^>]+>/g, ' ')     // remove tags HTML\n  .replace(/&nbsp;/g, ' ')      // remove entidades HTML\n  .replace(/&amp;/g, '&')\n  .replace(/\\s+/g, ' ')         // colapsa espaços\n  .trim()\n  .substring(0, 800);           // limita tamanho\n\n// --- DESCRIÇÃO ---\nconst processo = r['processo.pasta'] || 'N/A';\nconst cliente = r['pessoa.nome'] || 'N/A';\nconst responsavel = r['proprietario.nome'] || 'N/A';\nconst dataCriacao = r.data || 'N/A';\nconst prazoFatal = r.dataPrazoFatal || 'N/A';\n\nconst descricao = [\n  `📂 Processo: ${processo}`,\n  `👤 Cliente: ${cliente}`,\n  `👨‍⚖️ Responsável: ${responsavel}`,\n  `📅 Data: ${dataCriacao} | ⚠️ Prazo fatal: ${prazoFatal}`,\n  `🏷️ Tipo: ${tipo.label}`,\n  obsLimpa ? `\\n📝 Obs:\\n${obsLimpa}` : '',\n  `\\n🔢 ID DataJuri: ${r.id}`\n].filter(Boolean).join('\\n');\n\n// --- DATA de vencimento → ISO (de DD/MM/YYYY) ---\nconst dataVenc = r.dataPrazoFatal ? (() => {\n  const p = r.dataPrazoFatal.split('/');\n  return p.length === 3 ? `${p[2]}-${p[1]}-${p[0]}T12:00:00.000Z` : null;\n})() : null;\n\nreturn [{\n  json: {\n    titulo,\n    descricao,\n    dataVencimento: dataVenc,\n    labelCor: tipo.cor,\n    labelNome: tipo.label,\n    tipo: prefixo,\n    id_datajuri: r.id\n  }\n}];"
+      },
+      "id": "3b75be84-faa0-464a-b438-f039f2c2652b",
+      "name": "Monta Card",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        944,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.trello.com/1/cards",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "trelloApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "idList",
+              "value": "69bb474647779a97cb6786b4"
+            },
+            {
+              "name": "name",
+              "value": "={{ $json.titulo }}"
+            },
+            {
+              "name": "desc",
+              "value": "={{ $json.descricao }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "81a00303-c19d-4c00-ac72-adafd3c76ada",
+      "name": "Cria Card Trello",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1184,
+        256
+      ],
+      "credentials": {
+        "trelloApi": {
+          "id": "yV2Whs8Z7g7gCMOM",
+          "name": "Trello-ragheria"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://api.trello.com/1/cards/{{ $input.first().json.id }}/due",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "trelloApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "value",
+              "value": "={{ $('Monta Card').first().json.dataVencimento }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "9593f2d9-e0f7-4e7c-9e6d-de14b186d675",
+      "name": "Adiciona Data Vencimento",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1424,
+        176
+      ],
+      "credentials": {
+        "trelloApi": {
+          "id": "yV2Whs8Z7g7gCMOM",
+          "name": "Trello-ragheria"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Verifica se tem data válida para decidir se chama o nó de data\nconst dataVenc = $('Monta Card').first().json.dataVencimento;\nconst card = $input.first().json;\n\nconsole.log(`✅ Card criado: ${card.name} | ID: ${card.id} | Prazo: ${dataVenc || 'sem data'}`);\nreturn [{ json: { sucesso: true, card_id: card.id, card_url: card.shortUrl, tem_data: !!dataVenc } }];"
+      },
+      "id": "7b688be6-8416-4b23-8dab-c514ac303c3b",
+      "name": "Log",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1424,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "4vMm6qr8IQhUy67J",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/4vMm6qr8IQhUy67J",
+          "cachedResultName": "NNADV - Auth DataJuri"
+        },
+        "options": {}
+      },
+      "id": "d0ac7618-760e-4c16-a692-e6a58f0f3355",
+      "name": "Busca Token2",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [
+        -256,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const token = $input.first().json.bearer;\nif (!token) throw new Error('Token não encontrado');\n\n// Data de hoje no formato DD/MM/YYYY para o critério\nconst hoje = new Date();\nconst dd = String(hoje.getDate()).padStart(2, '0');\nconst mm = String(hoje.getMonth() + 1).padStart(2, '0');\nconst yyyy = hoje.getFullYear();\nconst hojeStr = `${dd}/${mm}/${yyyy}`;\n\nconsole.log(`Buscando atividades com prazo >= ${hojeStr}`);\n\nreturn [{ json: { bearer: token, hoje: hojeStr } }];"
+      },
+      "id": "cfe52bcc-1ad3-4eb4-b84f-296f0afe8ab8",
+      "name": "Prepara Contexto2",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -16,
+        256
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Busca Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca Token": {
+      "main": [
+        [
+          {
+            "node": "Prepara Contexto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET Módulos": {
+      "main": [
+        []
+      ]
+    },
+    "Prepara Contexto": {
+      "main": [
+        [
+          {
+            "node": "GET Módulos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "A cada 30 minutos": {
+      "main": [
+        [
+          {
+            "node": "Busca Token2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET Atividades": {
+      "main": [
+        []
+      ]
+    },
+    "Extrai Registros": {
+      "main": [
+        [
+          {
+            "node": "Deduplicação",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Deduplicação": {
+      "main": [
+        [
+          {
+            "node": "Monta Card",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Monta Card": {
+      "main": [
+        [
+          {
+            "node": "Cria Card Trello",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cria Card Trello": {
+      "main": [
+        [
+          {
+            "node": "Adiciona Data Vencimento",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Adiciona Data Vencimento": {
+      "main": [
+        [
+          {
+            "node": "Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca Token2": {
+      "main": [
+        [
+          {
+            "node": "Prepara Contexto2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepara Contexto2": {
+      "main": [
+        [
+          {
+            "node": "GET Atividades",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "webhooks.ragheria.cloud",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+            "accept-encoding": "gzip, deflate, br, zstd",
+            "accept-language": "pt-PT,pt;q=0.9,en-US;q=0.8,en;q=0.7",
+            "cache-control": "max-age=0",
+            "priority": "u=0, i",
+            "sec-ch-ua": "\"Chromium\";v=\"146\", \"Not-A.Brand\";v=\"24\", \"Google Chrome\";v=\"146\"",
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": "\"Windows\"",
+            "sec-fetch-dest": "document",
+            "sec-fetch-mode": "navigate",
+            "sec-fetch-site": "none",
+            "sec-fetch-user": "?1",
+            "upgrade-insecure-requests": "1",
+            "x-forwarded-for": "168.90.7.51",
+            "x-forwarded-host": "webhooks.ragheria.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "traefik_traefik.1",
+            "x-real-ip": "168.90.7.51"
+          },
+          "params": {},
+          "query": {},
+          "body": {},
+          "webhookUrl": "https://webhooks.ragheria.cloud/webhook/datajuri-explorer",
+          "executionMode": "production"
+        }
+      }
+    ],
+    "Busca Token": [
+      {
+        "json": {
+          "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX25hbWUiOiJwZWRyb0BubmFkdi5jb20uYnIiLCJhdXRob3JpdGllcyI6WyJST0xFX1VTRVIiXSwianRpIjoiZFpNQU5pV3oyMWtiUGFGMU9LSzVXWlh2a2RvIiwiY2xpZW50X2lkIjoidmlwNms0cHFzbjFzNWw3aGh5Nm8iLCJzY29wZSI6WyJkajM2Il19.NpC9k6vVN8Vs5mZTvHmQEamNIy25WrRhB8JEb_ogEhM",
+          "token_type": "bearer",
+          "bearer": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX25hbWUiOiJwZWRyb0BubmFkdi5jb20uYnIiLCJhdXRob3JpdGllcyI6WyJST0xFX1VTRVIiXSwianRpIjoiZFpNQU5pV3oyMWtiUGFGMU9LSzVXWlh2a2RvIiwiY2xpZW50X2lkIjoidmlwNms0cHFzbjFzNWw3aGh5Nm8iLCJzY29wZSI6WyJkajM2Il19.NpC9k6vVN8Vs5mZTvHmQEamNIy25WrRhB8JEb_ogEhM",
+          "gerado_em": "2026-03-19T01:24:22.169Z"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "GET Módulos": [
+      {
+        "json": {
+          "nome": "AndamentoFase",
+          "rotulo": "Andamento da fase"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "nome": "Caso",
+          "rotulo": "Caso"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "nome": "Boleto",
+          "rotulo": "Boleto bancário"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "nome": "Procuracao",
+          "rotulo": "Procuração"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "nome": "HoraTrabalhada",
+          "rotulo": "Horas trabalhadas"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "nome": "Contrato",
+          "rotulo": "Contrato"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "nome": "Usuario",
+          "rotulo": "Usuário"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "nome": "Tarefa",
+          "rotulo": "Tarefa"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "nome": "ContasPagar",
+          "rotulo": "Contas a pagar"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "nome": "Movimento",
+          "rotulo": "Lançamento em Conta"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "nome": "ContasReceber",
+          "rotulo": "Contas a receber"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "nome": "FaseProcesso",
+          "rotulo": "Fase do processo"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "nome": "PedidoProcesso",
+          "rotulo": "Pedidos/Objetos do processo"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "nome": "Custas",
+          "rotulo": "Custas/Despesas"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "nome": "Calculo",
+          "rotulo": "Cálculo de atualização de valores"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "nome": "OrdemServico",
+          "rotulo": "Ordem de serviço"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "nome": "RecorteConsulta",
+          "rotulo": "Recorte da Consulta de Terceiros"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "nome": "PessoaFisica",
+          "rotulo": "Pessoa Física"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "nome": "PedidoCompra",
+          "rotulo": "Pedido de compra (sistema)"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "nome": "Demo",
+          "rotulo": "Demonstração (sistema)"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "nome": "Compromisso",
+          "rotulo": "Compromisso"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "nome": "PessoaJuridica",
+          "rotulo": "Pessoa Jurídica"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "nome": "Processo",
+          "rotulo": "Processo"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "nome": "Pessoa",
+          "rotulo": "Pessoa"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "nome": "GarantiasProcesso",
+          "rotulo": "Garantias/Depósitos do processo"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "nome": "ContasReceberPagar",
+          "rotulo": "Contas a receber/pagar"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "nome": "Atividade",
+          "rotulo": "Atividade"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "Prepara Contexto": [
+      {
+        "json": {
+          "bearer": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX25hbWUiOiJwZWRyb0BubmFkdi5jb20uYnIiLCJhdXRob3JpdGllcyI6WyJST0xFX1VTRVIiXSwianRpIjoiZFpNQU5pV3oyMWtiUGFGMU9LSzVXWlh2a2RvIiwiY2xpZW50X2lkIjoidmlwNms0cHFzbjFzNWw3aGh5Nm8iLCJzY29wZSI6WyJkajM2Il19.NpC9k6vVN8Vs5mZTvHmQEamNIy25WrRhB8JEb_ogEhM",
+          "modo": "modulos",
+          "modulo": null,
+          "page": 0,
+          "pageSize": 20,
+          "criterio": null
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "versionId": "a0320d6b-d375-466b-801a-c54981d4e916",
+  "activeVersionId": null,
+  "versionCounter": 141,
+  "triggerCount": 2,
+  "tags": [
+    {
+      "updatedAt": "2026-04-08T20:45:58.379Z",
+      "createdAt": "2026-04-08T20:45:58.379Z",
+      "id": "sbYgcdkH4uF5IhP7",
+      "name": "CNADV"
+    }
+  ],
+  "shared": [
+    {
+      "updatedAt": "2026-03-19T01:16:54.285Z",
+      "createdAt": "2026-03-19T01:16:54.285Z",
+      "role": "workflow:owner",
+      "workflowId": "JjeuKzgG7FR2XRDr",
+      "projectId": "yfi5aMXS1Xk5SAYD",
+      "project": {
+        "updatedAt": "2025-11-22T00:31:20.493Z",
+        "createdAt": "2025-11-22T00:22:48.669Z",
+        "id": "yfi5aMXS1Xk5SAYD",
+        "name": "RAPHAEL GIL HERNEQUE <raphaelgilh@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "5e159aef-1290-489f-abf0-1ace935b45e6"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}
