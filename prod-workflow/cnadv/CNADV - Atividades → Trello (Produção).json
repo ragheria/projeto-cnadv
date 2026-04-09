@@ -1,0 +1,453 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 30
+            }
+          ]
+        }
+      },
+      "id": "e1df5142-0d6e-4190-b9e9-ce0f65b5472b",
+      "name": "A cada 30 minutos",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        448,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "4vMm6qr8IQhUy67J",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "id": "d52f81a0-4bab-4ec2-90e2-7144472be49f",
+      "name": "Auth DataJuri",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [
+        704,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const bearer = $input.first().json.access_token;\nconst hoje = new Date();\nconst dd = String(hoje.getDate()).padStart(2, '0');\nconst mm = String(hoje.getMonth() + 1).padStart(2, '0');\nconst yyyy = hoje.getFullYear();\nreturn [{ json: { bearer, hoje: dd + '/' + mm + '/' + yyyy } }];"
+      },
+      "id": "b6af6ba0-2731-4180-b31d-f4ad8534bc87",
+      "name": "Prepara Contexto",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        928,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.datajuri.com.br/v1/entidades/Atividade",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "criterio",
+              "value": "=dataCadastro | maior ou igual | 07/04/2026"
+            },
+            {
+              "name": "pageSize",
+              "value": "100"
+            },
+            {
+              "name": "removerHtml",
+              "value": "true"
+            },
+            {
+              "name": "campos",
+              "value": "id,assunto,status,tipoAtividade,dataPrazoFatal,data,dataCadastro,prioridade,proprietario.nome,r,processo.pasta,processo.cliente.nome,processo.adverso.nome,processo.tipoAcao,processo.natureza,pessoa.nome,observacao,ordemServico.numero,ordemServicoId,listaAndamentoOrdemServicoStr,relativoa,criadoPor.nome,tempoEmAbertoStr,codigoAtividade"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ \"Bearer \" + $json.bearer }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "67b03366-5b5d-4d12-9e87-9cb9fc0a0e5c",
+      "name": "GET Atividades Hoje",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1152,
+        256
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "bWQ6rpju76XzusgJ",
+          "name": "uazapi-iderol"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = ($input.first().json.rows || [])\n  .filter(r => r.status !== 'Concluído');\nif (rows.length === 0) return [];\nconsole.log('Atividades do dia: ' + rows.length);\nreturn rows.map(r => ({ json: r }));"
+      },
+      "id": "53b03364-06de-4380-906a-87cbb75fb238",
+      "name": "Extrai Atividades",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1360,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "atividades_processadas"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "criado_em",
+              "condition": "gte",
+              "keyValue": "={{ $now.minus(2,'days').toISO() }}"
+            }
+          ]
+        }
+      },
+      "id": "adf48ca6-fc17-4441-b4ab-e03d92f0d390",
+      "name": "Lê Processados",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1584,
+        256
+      ],
+      "executeOnce": true,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const processadosIds = new Set(\n  $input.all()\n    .map(r => r.json.source_id)\n    .filter(id => id !== undefined && id !== null && id !== '')\n    .map(String)\n);\nconst atividades = $('Extrai Atividades').all();\nconst novas = atividades.filter(a => a.json.id !== undefined && !processadosIds.has(String(a.json.id)));\nif (novas.length === 0) return [];\nconsole.log('Atividades novas: ' + novas.length + ' de ' + atividades.length + ' do dia');\nreturn novas;"
+      },
+      "id": "75ae44f7-edd9-484d-8c9c-5b36f04c7fc3",
+      "name": "Filtra Novos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1808,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "console.log('Loop concluído: ' + new Date().toISOString());\nreturn [{ json: { execucao: new Date().toISOString(), status: 'done' } }];"
+      },
+      "id": "b68c8069-488d-454d-85b9-8daf4f250734",
+      "name": "Log Execução",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2240,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(item => {\n  const a = item.json;\n  const urgente = a.prioridade === 'Urgente' ? '🔴 ' : '';\n  const titulo = urgente + (a.assunto || 'Sem assunto');\n\n  const linhas = [];\n  if (a.relativoa === 'Processo') {\n    if (a['processo.pasta'])        linhas.push('📁 Processo: ' + a['processo.pasta']);\n    if (a['processo.cliente.nome']) linhas.push('👤 Cliente: ' + a['processo.cliente.nome']);\n    if (a['processo.adverso.nome']) linhas.push('⚔️ Adverso: ' + a['processo.adverso.nome']);\n    if (a['processo.tipoAcao'])     linhas.push('📋 Ação: ' + a['processo.tipoAcao']);\n  } else if (a.relativoa === 'OrdemServico') {\n    if (a['ordemServico.numero'])   linhas.push('📋 OS: ' + a['ordemServico.numero']);\n    if (a['pessoa.nome'])           linhas.push('👤 Cliente: ' + a['pessoa.nome']);\n  } else {\n    if (a['pessoa.nome'])           linhas.push('👤 Pessoa: ' + a['pessoa.nome']);\n  }\n  if (a['proprietario.nome']) linhas.push('👩‍💼 Responsável: ' + a['proprietario.nome']);\n  if (a.r)                    linhas.push('👥 Revisor: ' + a.r);\n  if (a.tipoAtividade)        linhas.push('🏷️ Tipo: ' + a.tipoAtividade);\n  if (a.observacao) {\n    linhas.push('');\n    linhas.push('📝 Observação:');\n    linhas.push(a.observacao.substring(0, 800));\n  }\n  if (a.relativoa === 'OrdemServico' && a.listaAndamentoOrdemServicoStr) {\n    linhas.push('');\n    linhas.push('📋 Histórico OS:');\n    linhas.push(a.listaAndamentoOrdemServicoStr.substring(0, 600));\n  }\n  linhas.push('');\n  linhas.push('---');\n  linhas.push('Source: DataJuri | Module: Atividade | ID: ' + a.id);\n\n  const desc = linhas.join('\\n');\n  let due = null;\n  if (a.dataPrazoFatal) {\n    const p = a.dataPrazoFatal.split('/');\n    if (p.length === 3) due = p[2] + '-' + p[1] + '-' + p[0] + 'T12:00:00.000Z';\n  }\n  return { json: { name: titulo, desc, due } };\n});"
+      },
+      "id": "b39b4948-6ed0-4e1c-8576-24fbcc366ed2",
+      "name": "Monta Card",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2240,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.trello.com/1/cards",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "trelloApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "idList",
+              "value": "69bb474647779a97cb6786b4"
+            },
+            {
+              "name": "name",
+              "value": "={{ $json.name }}"
+            },
+            {
+              "name": "desc",
+              "value": "={{ $json.desc }}"
+            },
+            {
+              "name": "due",
+              "value": "={{ $json.due }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ffac5ec8-bccd-4c87-b8bf-1c41c04f2e1c",
+      "name": "Cria Card Trello",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2464,
+        352
+      ],
+      "credentials": {
+        "trelloApi": {
+          "id": "yV2Whs8Z7g7gCMOM",
+          "name": "Trello-ragheria"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(item => {\n  const trelloId = item.json.id || '';\n  const desc = item.json.desc || '';\n  const match = desc.match(/ID:\\s*(\\d+)/);\n  const sourceId = match ? match[1] : '';\n  return { json: {\n    source_id: sourceId,\n    assunto: item.json.name || '',\n    trello_card_id: trelloId,\n    criado_em: new Date().toISOString()\n  } };\n});"
+      },
+      "id": "faedb4a0-8358-437d-99ce-c4ee730c23ed",
+      "name": "Prepara Registro",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2688,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "atividades_processadas"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "source_id": "={{ $json.source_id }}",
+            "assunto": "={{ $json.assunto }}",
+            "trello_card_id": "={{ $json.trello_card_id }}",
+            "criado_em": "={{ $json.criado_em }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "323eecfb-4755-4f28-9378-341d10422023",
+      "name": "Registra no DataTable",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        2912,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "d7c59e3a-92a4-4b8e-828a-4e8c107ba7b6",
+      "name": "Loop Over Items1",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        2032,
+        256
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "aebc2404-44ff-4c3e-ba2b-953881a5fe68",
+      "name": "Teste Manual",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        432,
+        336
+      ]
+    }
+  ],
+  "connections": {
+    "A cada 30 minutos": {
+      "main": [
+        [
+          {
+            "node": "Auth DataJuri",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auth DataJuri": {
+      "main": [
+        [
+          {
+            "node": "Prepara Contexto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepara Contexto": {
+      "main": [
+        [
+          {
+            "node": "GET Atividades Hoje",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET Atividades Hoje": {
+      "main": [
+        [
+          {
+            "node": "Extrai Atividades",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extrai Atividades": {
+      "main": [
+        [
+          {
+            "node": "Lê Processados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lê Processados": {
+      "main": [
+        [
+          {
+            "node": "Filtra Novos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filtra Novos": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Monta Card": {
+      "main": [
+        [
+          {
+            "node": "Cria Card Trello",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cria Card Trello": {
+      "main": [
+        [
+          {
+            "node": "Prepara Registro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepara Registro": {
+      "main": [
+        [
+          {
+            "node": "Registra no DataTable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registra no DataTable": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [
+          {
+            "node": "Log Execução",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Monta Card",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Teste Manual": {
+      "main": [
+        [
+          {
+            "node": "Auth DataJuri",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "aiBuilderAssisted": true,
+    "instanceId": "ba581e89662ad86916995065c64c89059e388688506b3ce260ed3ec7252352d8"
+  }
+}

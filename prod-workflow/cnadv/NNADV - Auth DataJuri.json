@@ -1,0 +1,102 @@
+{
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "2ec66765-bef8-4b8e-8122-fa11ea1be17f",
+      "name": "Chamado por outro workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        112,
+        224
+      ],
+      "notes": "Trigger quando outro workflow precisa de token"
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\n\nif (!response.access_token) {\n  throw new Error('Falha na autenticação DataJuri: ' + JSON.stringify(response));\n}\n\nreturn [{\n  json: {\n    access_token: response.access_token,\n    token_type: response.token_type || 'Bearer',\n    bearer: `Bearer ${response.access_token}`,\n    gerado_em: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "7a14f2f1-f8df-4df9-a4e8-1cf48f3dc2b6",
+      "name": "Extrai Token",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.datajuri.com.br/oauth/token",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "grant_type",
+              "value": "password"
+            },
+            {
+              "name": "username",
+              "value": "pedro@nnadv.com.br"
+            },
+            {
+              "name": "password",
+              "value": "ProvEdu@@1"
+            }
+          ]
+        },
+        "options": {
+          "redirect": {
+            "redirect": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        336,
+        224
+      ],
+      "id": "0b1542f3-2152-4da5-96cd-1ddd7dac59c0",
+      "name": "POST oauth/token",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "zoKH8nwZDz2OCnoa",
+          "name": "dataJuri"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Chamado por outro workflow": {
+      "main": [
+        [
+          {
+            "node": "POST oauth/token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST oauth/token": {
+      "main": [
+        [
+          {
+            "node": "Extrai Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "instanceId": "ba581e89662ad86916995065c64c89059e388688506b3ce260ed3ec7252352d8"
+  }
+}

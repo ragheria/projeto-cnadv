@@ -1,0 +1,365 @@
+{
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "afc81265-6db2-4cba-a4e0-13b7416e8179",
+      "name": "Inicio",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "4vMm6qr8IQhUy67J",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "id": "58552c51-f975-4a16-8e8c-a7bb6c132438",
+      "name": "Auth DataJuri",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [
+        448,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const token = $input.first().json.access_token;\nreturn [{ json: { bearer: token } }];"
+      },
+      "id": "98fd7080-138b-48b2-a3b5-1cceb79413fd",
+      "name": "Salva Token",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.datajuri.com.br/v1/modulos",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ \"Bearer \" + $json.bearer }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "071ab1af-d445-45b8-933c-e3a6f5f91477",
+      "name": "GET Módulos",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        848,
+        304
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "bWQ6rpju76XzusgJ",
+          "name": "uazapi-iderol"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const bearer = $('Salva Token').first().json.bearer;\nreturn $input.all().map(item => ({\n  json: {\n    nome: item.json.nome,\n    rotulo: item.json.rotulo,\n    bearer\n  }\n}));"
+      },
+      "id": "9ee2e3c3-f4f5-49da-b3a1-f7d669ff1646",
+      "name": "Extrai Módulos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(item => ({ json: item.json }));"
+      },
+      "id": "3ff7f2aa-d2d8-4b72-9712-39431649d4a6",
+      "name": "Compila Relatório",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2448,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nreturn [{ json: { modulo: item.nome, rotulo: item.rotulo, bearer: item.bearer } }];"
+      },
+      "id": "c07934be-7d86-490f-b05d-276177e1e849",
+      "name": "Salva Módulo Atual",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ \"https://api.datajuri.com.br/v1/campos/\" + $json.modulo }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ \"Bearer \" + $json.bearer }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6c21627c-9619-4911-9c59-a440f1eac67b",
+      "name": "GET Campos",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1648,
+        304
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "bWQ6rpju76XzusgJ",
+          "name": "uazapi-iderol"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const ctx = $('Salva Módulo Atual').first().json;\nconst campos = $input.all().map(item => ({\n  nome: item.json.nome,\n  rotulo: item.json.rotulo\n}));\nreturn [{ json: {\n  modulo: ctx.modulo,\n  rotulo: ctx.rotulo,\n  bearer: ctx.bearer,\n  totalCampos: campos.length,\n  campos\n} }];"
+      },
+      "id": "4d884ba1-fa9a-4307-926b-4eb3c53f53a5",
+      "name": "Agrega Campos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1840,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ \"https://api.datajuri.com.br/v1/entidades/\" + $json.modulo }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "pageSize",
+              "value": "2"
+            },
+            {
+              "name": "removerHtml",
+              "value": "true"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ \"Bearer \" + $json.bearer }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1bf7e302-6a9e-4faf-b37a-a25e1ac6bd5b",
+      "name": "GET Entidades (sample)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2048,
+        304
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "bWQ6rpju76XzusgJ",
+          "name": "uazapi-iderol"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const ctx = $('Agrega Campos').first().json;\nconst entidades = $input.all().map(item => item.json);\nreturn [{ json: {\n  modulo: ctx.modulo,\n  rotulo: ctx.rotulo,\n  totalCampos: ctx.totalCampos,\n  campos: ctx.campos,\n  totalEntidadesAmostra: entidades.length,\n  entidadesAmostra: entidades\n} }];"
+      },
+      "id": "14c308b2-6aeb-4281-b222-264012f98144",
+      "name": "Agrega Entidades",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2240,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "4f54b2ad-a9bf-49b1-8d01-ecb14cc1d659",
+      "name": "Loop Módulos",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1248,
+        304
+      ]
+    }
+  ],
+  "connections": {
+    "Inicio": {
+      "main": [
+        [
+          {
+            "node": "Auth DataJuri",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auth DataJuri": {
+      "main": [
+        [
+          {
+            "node": "Salva Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Salva Token": {
+      "main": [
+        [
+          {
+            "node": "GET Módulos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET Módulos": {
+      "main": [
+        [
+          {
+            "node": "Extrai Módulos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extrai Módulos": {
+      "main": [
+        [
+          {
+            "node": "Loop Módulos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Salva Módulo Atual": {
+      "main": [
+        [
+          {
+            "node": "GET Campos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET Campos": {
+      "main": [
+        [
+          {
+            "node": "Agrega Campos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agrega Campos": {
+      "main": [
+        [
+          {
+            "node": "GET Entidades (sample)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET Entidades (sample)": {
+      "main": [
+        [
+          {
+            "node": "Agrega Entidades",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agrega Entidades": {
+      "main": [
+        [
+          {
+            "node": "Loop Módulos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Módulos": {
+      "main": [
+        [
+          {
+            "node": "Compila Relatório",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Salva Módulo Atual",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "aiBuilderAssisted": true,
+    "instanceId": "ba581e89662ad86916995065c64c89059e388688506b3ce260ed3ec7252352d8"
+  }
+}
