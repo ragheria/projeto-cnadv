@@ -1,0 +1,231 @@
+{
+  "id": "69ebf23e71673868c48106a4",
+  "address": null,
+  "agent": {
+    "name": null,
+    "conversationId": null
+  },
+  "badges": {
+    "attachments": 0,
+    "fogbugz": "",
+    "checkItems": 0,
+    "checkItemsChecked": 0,
+    "checkItemsEarliestDue": null,
+    "comments": 0,
+    "description": false,
+    "due": null,
+    "dueComplete": false,
+    "lastUpdatedByAi": false,
+    "start": null,
+    "externalSource": null,
+    "attachmentsByType": {
+      "trello": {
+        "board": 0,
+        "card": 0
+      }
+    },
+    "location": false,
+    "votes": 0,
+    "maliciousAttachments": 0,
+    "viewingMemberVoted": false,
+    "subscribed": false
+  },
+  "checkItemStates": [],
+  "closed": false,
+  "coordinates": null,
+  "creationMethod": null,
+  "creationMethodError": null,
+  "creationMethodLoadingStartedAt": null,
+  "dueComplete": false,
+  "dateClosed": null,
+  "dateLastActivity": "2026-04-24T22:45:04.995Z",
+  "dateCompleted": null,
+  "dateViewedByCreator": null,
+  "desc": "",
+  "descData": {
+    "emoji": {
+
+    }
+  },
+  "due": null,
+  "dueReminder": null,
+  "email": "ragheria+367j3qo5a4h07sjromo+36exh7hk6p75mdc7rfo+29uuwqf4dd@boards.trello.com",
+  "externalSource": null,
+  "faviconUrl": null,
+  "idBoard": "664209da97e7150abe658cc2",
+  "idChecklists": [],
+  "idLabels": [],
+  "idList": "69ebf2186ffe931257d2c750",
+  "idMemberCreator": "69bb3c25db54f8055cdf0870",
+  "idMembers": [],
+  "idMembersVoted": [],
+  "idOrganization": "65d4da1e4b1c2d8ff0c68265",
+  "idShort": 2038,
+  "idAttachmentCover": null,
+  "labels": [],
+  "limits": {
+    "attachments": {
+      "perCard": {
+        "status": "ok",
+        "disableAt": 1000,
+        "warnAt": 800
+      }
+    },
+    "checklists": {
+      "perCard": {
+        "status": "ok",
+        "disableAt": 500,
+        "warnAt": 400
+      }
+    },
+    "stickers": {
+      "perCard": {
+        "status": "ok",
+        "disableAt": 70,
+        "warnAt": 56
+      }
+    }
+  },
+  "locationName": null,
+  "manualCoverAttachment": true,
+  "name": "PROVISÓRIO",
+  "nodeId": "ari:cloud:trello::card/workspace/65d4da1e4b1c2d8ff0c68265/69ebf23e71673868c48106a4",
+  "originalDesc": "",
+  "originalName": "",
+  "pinned": false,
+  "pos": 140737488355328,
+  "recurrenceRule": null,
+  "shortLink": "D4GVuOum",
+  "shortUrl": "https://trello.com/c/D4GVuOum",
+  "singleInstrumentationId": null,
+  "sourceEmail": null,
+  "staticMapUrl": null,
+  "start": null,
+  "subscribed": false,
+  "url": "https://trello.com/c/D4GVuOum/2038-provis%C3%B3rio",
+  "urlSource": null,
+  "urlSourceText": null,
+  "cover": {
+    "idAttachment": null,
+    "color": "red",
+    "idUploadedBackground": null,
+    "size": "normal",
+    "brightness": "light",
+    "yPosition": 0.5,
+    "idPlugin": null
+  },
+  "isTemplate": false,
+  "cardRole": null,
+  "mirrorSourceId": null,
+  "mirrorSourceNodeId": null,
+  "actions": [
+    {
+      "id": "69ebf27181d5ed1ec4303158",
+      "idMemberCreator": "69bb3c25db54f8055cdf0870",
+      "data": {
+        "old": {
+          "cover": {
+            "color": null,
+            "idAttachment": null,
+            "idUploadedBackground": null,
+            "size": "normal",
+            "brightness": "dark",
+            "manualCoverAttachment": false,
+            "plugin": null,
+            "yPosition": 0.5
+          }
+        },
+        "card": {
+          "cover": {
+            "color": "red",
+            "idAttachment": null,
+            "idUploadedBackground": null,
+            "size": "normal",
+            "brightness": "light",
+            "manualCoverAttachment": true,
+            "plugin": null,
+            "yPosition": 0.5
+          },
+          "id": "69ebf23e71673868c48106a4",
+          "name": "PROVISÓRIO",
+          "idShort": 2038,
+          "shortLink": "D4GVuOum"
+        },
+        "board": {
+          "id": "664209da97e7150abe658cc2",
+          "name": "CN - PRODUÇÃO JURÍDICA",
+          "shortLink": "IJghilnI"
+        },
+        "list": {
+          "id": "69ebf2186ffe931257d2c750",
+          "name": "CARDS AUTOMAÇÃO"
+        }
+      },
+      "appCreator": null,
+      "type": "updateCard",
+      "date": "2026-04-24T22:45:05.014Z",
+      "limits": null,
+      "memberCreator": {
+        "id": "69bb3c25db54f8055cdf0870",
+        "activityBlocked": false,
+        "avatarHash": "155c3ff6e1d67ca61599d3a001d8ff02",
+        "avatarUrl": "https://trello-members.s3.amazonaws.com/69bb3c25db54f8055cdf0870/155c3ff6e1d67ca61599d3a001d8ff02",
+        "fullName": "ragheria",
+        "idMemberReferrer": null,
+        "initials": "R",
+        "nonPublic": {
+          "fullName": "ragheria",
+          "initials": "R",
+          "avatarHash": null
+        },
+        "nonPublicAvailable": true,
+        "username": "ragheria"
+      }
+    },
+    {
+      "id": "69ebf23e71673868c48106cc",
+      "idMemberCreator": "69bb3c25db54f8055cdf0870",
+      "data": {
+        "card": {
+          "id": "69ebf23e71673868c48106a4",
+          "name": "PROVISÓRIO",
+          "idShort": 2038,
+          "shortLink": "D4GVuOum"
+        },
+        "list": {
+          "id": "69ebf2186ffe931257d2c750",
+          "name": "CARDS AUTOMAÇÃO"
+        },
+        "board": {
+          "id": "664209da97e7150abe658cc2",
+          "name": "CN - PRODUÇÃO JURÍDICA",
+          "shortLink": "IJghilnI"
+        }
+      },
+      "appCreator": null,
+      "type": "createCard",
+      "date": "2026-04-24T22:44:14.724Z",
+      "limits": null,
+      "memberCreator": {
+        "id": "69bb3c25db54f8055cdf0870",
+        "activityBlocked": false,
+        "avatarHash": "155c3ff6e1d67ca61599d3a001d8ff02",
+        "avatarUrl": "https://trello-members.s3.amazonaws.com/69bb3c25db54f8055cdf0870/155c3ff6e1d67ca61599d3a001d8ff02",
+        "fullName": "ragheria",
+        "idMemberReferrer": null,
+        "initials": "R",
+        "nonPublic": {
+          "fullName": "ragheria",
+          "initials": "R",
+          "avatarHash": null
+        },
+        "nonPublicAvailable": true,
+        "username": "ragheria"
+      }
+    }
+  ],
+  "checklists": [],
+  "customFieldItems": [],
+  "members": [],
+  "pluginData": []
+}

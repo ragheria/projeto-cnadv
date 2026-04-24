@@ -2,26 +2,6 @@
   "nodes": [
     {
       "parameters": {
-        "rule": {
-          "interval": [
-            {
-              "field": "minutes",
-              "minutesInterval": 30
-            }
-          ]
-        }
-      },
-      "id": "e1df5142-0d6e-4190-b9e9-ce0f65b5472b",
-      "name": "A cada 30 minutos",
-      "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1.3,
-      "position": [
-        448,
-        144
-      ]
-    },
-    {
-      "parameters": {
         "workflowId": {
           "__rl": true,
           "value": "4vMm6qr8IQhUy67J",
@@ -29,26 +9,26 @@
         },
         "options": {}
       },
-      "id": "d52f81a0-4bab-4ec2-90e2-7144472be49f",
+      "id": "e9d773db-8a2f-421d-ab08-ede8a3b3f201",
       "name": "Auth DataJuri",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.1,
       "position": [
-        704,
-        256
+        -3008,
+        -160
       ]
     },
     {
       "parameters": {
-        "jsCode": "const bearer = $input.first().json.access_token;\nconst hoje = new Date();\nconst dd = String(hoje.getDate()).padStart(2, '0');\nconst mm = String(hoje.getMonth() + 1).padStart(2, '0');\nconst yyyy = hoje.getFullYear();\nreturn [{ json: { bearer, hoje: dd + '/' + mm + '/' + yyyy } }];"
+        "jsCode": "const bearer = $input.first().json.access_token;\nconst hoje = new Date(Date.now() - 3 * 60 * 60 * 1000);\nconst dd = String(hoje.getUTCDate()).padStart(2, '0');\nconst mm = String(hoje.getUTCMonth() + 1).padStart(2, '0');\nconst yyyy = hoje.getUTCFullYear();\nreturn [{ json: { bearer, hoje: dd + '/' + mm + '/' + yyyy } }];"
       },
-      "id": "b6af6ba0-2731-4180-b31d-f4ad8534bc87",
+      "id": "e8fab4ce-9de6-42d2-a21b-fc1231076dd5",
       "name": "Prepara Contexto",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        928,
-        256
+        -2784,
+        -160
       ]
     },
     {
@@ -61,7 +41,7 @@
           "parameters": [
             {
               "name": "criterio",
-              "value": "=dataCadastro | maior ou igual | 07/04/2026"
+              "value": "=dataCadastro | maior ou igual | {{ $json.hoje }}"
             },
             {
               "name": "pageSize",
@@ -73,7 +53,7 @@
             },
             {
               "name": "campos",
-              "value": "id,assunto,status,tipoAtividade,dataPrazoFatal,data,dataCadastro,prioridade,proprietario.nome,r,processo.pasta,processo.cliente.nome,processo.adverso.nome,processo.tipoAcao,processo.natureza,pessoa.nome,observacao,ordemServico.numero,ordemServicoId,listaAndamentoOrdemServicoStr,relativoa,criadoPor.nome,tempoEmAbertoStr,codigoAtividade"
+              "value": "id,assunto,status,tipoAtividade,dataPrazoFatal,data,dataCadastro,prioridade,proprietario.nome,r,processo.pasta,processo.cliente.nome,processo.adverso.nome,processo.tipoAcao,processo.natureza,pessoa.nome,observacao,ordemServico.numero,ordemServicoId,listaAndamentoOrdemServicoStr,relativoa,criadoPor.nome,tempoEmAbertoStr,codigoAtividade,etiquetas"
             }
           ]
         },
@@ -88,13 +68,13 @@
         },
         "options": {}
       },
-      "id": "67b03366-5b5d-4d12-9e87-9cb9fc0a0e5c",
+      "id": "fe5c358f-f0ad-46e3-a8ec-6e80d1126cda",
       "name": "GET Atividades Hoje",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        1152,
-        256
+        -2560,
+        -160
       ],
       "credentials": {
         "httpHeaderAuth": {
@@ -105,15 +85,15 @@
     },
     {
       "parameters": {
-        "jsCode": "const rows = ($input.first().json.rows || [])\n  .filter(r => r.status !== 'Concluído');\nif (rows.length === 0) return [];\nconsole.log('Atividades do dia: ' + rows.length);\nreturn rows.map(r => ({ json: r }));"
+        "jsCode": "const assuntosIgnorados = [\n  'PTE - Pedido de Protocolo Eletrônico',\n  'PRE - Pedido de Renúncia',\n  'SOLIC - Solicitação CJ',\n];\nconst rows = ($input.first().json.rows || [])\n  .filter(r => r.status !== 'Concluído')\n  .filter(r => !assuntosIgnorados.some(a => (r.assunto || '').startsWith(a)));\nif (rows.length === 0) return [];\nconsole.log('Atividades do dia: ' + rows.length);\nreturn rows.map(r => ({ json: r }));"
       },
-      "id": "53b03364-06de-4380-906a-87cbb75fb238",
+      "id": "dbe74ad4-70a8-4d1c-bbf5-f862ba8ec227",
       "name": "Extrai Atividades",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1360,
-        256
+        -2352,
+        -160
       ]
     },
     {
@@ -129,18 +109,18 @@
             {
               "keyName": "criado_em",
               "condition": "gte",
-              "keyValue": "={{ $now.minus(2,'days').toISO() }}"
+              "keyValue": "={{ $now.minus(1,'day').toISO() }}"
             }
           ]
         }
       },
-      "id": "adf48ca6-fc17-4441-b4ab-e03d92f0d390",
+      "id": "73a9f264-394d-43fb-8fcb-e9e325700345",
       "name": "Lê Processados",
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        1584,
-        256
+        -2128,
+        -160
       ],
       "executeOnce": true,
       "alwaysOutputData": true
@@ -149,39 +129,39 @@
       "parameters": {
         "jsCode": "const processadosIds = new Set(\n  $input.all()\n    .map(r => r.json.source_id)\n    .filter(id => id !== undefined && id !== null && id !== '')\n    .map(String)\n);\nconst atividades = $('Extrai Atividades').all();\nconst novas = atividades.filter(a => a.json.id !== undefined && !processadosIds.has(String(a.json.id)));\nif (novas.length === 0) return [];\nconsole.log('Atividades novas: ' + novas.length + ' de ' + atividades.length + ' do dia');\nreturn novas;"
       },
-      "id": "75ae44f7-edd9-484d-8c9c-5b36f04c7fc3",
+      "id": "8b896975-af06-4ae6-8457-1cbacd03f12d",
       "name": "Filtra Novos",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1808,
-        256
+        -1904,
+        -160
       ]
     },
     {
       "parameters": {
         "jsCode": "console.log('Loop concluído: ' + new Date().toISOString());\nreturn [{ json: { execucao: new Date().toISOString(), status: 'done' } }];"
       },
-      "id": "b68c8069-488d-454d-85b9-8daf4f250734",
+      "id": "ccbe98f8-f146-4aab-9b07-41187e03490c",
       "name": "Log Execução",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2240,
-        128
+        -1472,
+        -288
       ]
     },
     {
       "parameters": {
-        "jsCode": "return $input.all().map(item => {\n  const a = item.json;\n  const urgente = a.prioridade === 'Urgente' ? '🔴 ' : '';\n  const titulo = urgente + (a.assunto || 'Sem assunto');\n\n  const linhas = [];\n  if (a.relativoa === 'Processo') {\n    if (a['processo.pasta'])        linhas.push('📁 Processo: ' + a['processo.pasta']);\n    if (a['processo.cliente.nome']) linhas.push('👤 Cliente: ' + a['processo.cliente.nome']);\n    if (a['processo.adverso.nome']) linhas.push('⚔️ Adverso: ' + a['processo.adverso.nome']);\n    if (a['processo.tipoAcao'])     linhas.push('📋 Ação: ' + a['processo.tipoAcao']);\n  } else if (a.relativoa === 'OrdemServico') {\n    if (a['ordemServico.numero'])   linhas.push('📋 OS: ' + a['ordemServico.numero']);\n    if (a['pessoa.nome'])           linhas.push('👤 Cliente: ' + a['pessoa.nome']);\n  } else {\n    if (a['pessoa.nome'])           linhas.push('👤 Pessoa: ' + a['pessoa.nome']);\n  }\n  if (a['proprietario.nome']) linhas.push('👩‍💼 Responsável: ' + a['proprietario.nome']);\n  if (a.r)                    linhas.push('👥 Revisor: ' + a.r);\n  if (a.tipoAtividade)        linhas.push('🏷️ Tipo: ' + a.tipoAtividade);\n  if (a.observacao) {\n    linhas.push('');\n    linhas.push('📝 Observação:');\n    linhas.push(a.observacao.substring(0, 800));\n  }\n  if (a.relativoa === 'OrdemServico' && a.listaAndamentoOrdemServicoStr) {\n    linhas.push('');\n    linhas.push('📋 Histórico OS:');\n    linhas.push(a.listaAndamentoOrdemServicoStr.substring(0, 600));\n  }\n  linhas.push('');\n  linhas.push('---');\n  linhas.push('Source: DataJuri | Module: Atividade | ID: ' + a.id);\n\n  const desc = linhas.join('\\n');\n  let due = null;\n  if (a.dataPrazoFatal) {\n    const p = a.dataPrazoFatal.split('/');\n    if (p.length === 3) due = p[2] + '-' + p[1] + '-' + p[0] + 'T12:00:00.000Z';\n  }\n  return { json: { name: titulo, desc, due } };\n});"
+        "jsCode": "const LABELS = {\n  'SOLIC - CJ': '664209da1dc51400ebd577e4',\n  'EMITIR GUIA': '664209da1dc51400ebd577e5',\n  'REUNIÃO': '664209da1dc51400ebd577e8',\n  'CONCLUÍDO': '66420ac875170ace07bac993',\n  'PRZ - PRAZO': '66420ac975170ace07bacadd',\n  'DEFESA': '66420aca75170ace07bacf8c',\n  'FAZER': '66420aca75170ace07bacfe5',\n  'CANCELADO': '66420aca75170ace07bad017',\n  'NOTIFICAÇÃO': '66420acb75170ace07bad28a',\n  'PROV - PROVIDÊNCIAS': '66420af7e678eb6714cd920a',\n  'PAT - PAUTA JULGAMENTO': '66420b06b6fe85b80bb5da80',\n  'AÇÃO JUDICIAL': '66420b143b71fcec9bbd125e',\n  'URGENTE': '66420b153b71fcec9bbd180c',\n  'BLOQUEIO': '66420c025a3d6d29b804fc13',\n  'GUILHERME': '66420c035a3d6d29b804fde2',\n  'ACOMPANHAMENTO': '66423be843c3ca948514246e',\n  'SEMANAL': '66423c0033a5b93d51c18486',\n  'AUDIÊNCIA': '66475e9034cb06b7480d4655',\n  'UNA': '66475ea8efed752eeda9f0a4',\n  'VIRTUAL': '66475ebec4d8fc8c798a1295',\n  'NEGOCIAÇÃO': '664bbbf100dfb1b8a4b74ef7',\n  'SUSPENSO - AG. DOCS': '66571cccd9999f11ef6d9c17',\n  'RETIRADO DE PAUTA': '665f19f3fa67ff3e0f07b0e0',\n  'IMPORTANTE': '66636a850b7f05a943da214b',\n  'EXCLUSIVO FS': '66684da0ebc97fd9754992ef',\n  'SEM ASSINATURA': '668d7080d41f7e495c91588f',\n  'SEM DOCUMENTOS': '668d70b3547f13e50c3e2fc0',\n  'RELATÓRIO ESPECÍFICO': '66acb90bb36724c724a19e13',\n  'PLANO EMPRESARIAL': '683d9c39267eb39cf023ff15',\n  'CONTRATO': '688222c510c56bf34c41bc6f',\n  'CONSULTA': '68822313cdcec529d0d86196',\n  'SERVIÇO CONSULTIVO': '6882235d71b29969209f4283',\n  'PERÍCIA': '68adefd44f1128d56c852ad6',\n  'PRESENCIAL': '68b1cfddb69905f441bfc6b1',\n  'LEILÃO': '68b85af7121994f4f3bbbd6c',\n  'SUSPENSÃO RECESSO': '694430c2e17e1d90c59c7432',\n  'EXEC. MIGUEL': '6978327eb0d0a0a4a1cd3d8e',\n  'EXEC. RENATA': '6978328b96ac01ac3dc1971b',\n  'DIL - DILIGÊNCIAS': '69b98edff12b9016381bbc9c',\n};\nreturn $input.all().map(item => {\n  const a = item.json;\n  const titulo = a.assunto || 'Sem assunto';\n\n  const linhas = [];\n  if (a.relativoa === 'Processo') {\n    if (a['processo.pasta'])        linhas.push('[📁 Processo: ' + a['processo.pasta'] + '](https://dj36.datajuri.com.br/app/#/lista/Processo/' + a.processoId + '?tab=detalhes&area=principal)');\n    if (a['processo.cliente.nome']) linhas.push('👤 Cliente: ' + a['processo.cliente.nome']);\n    if (a['processo.adverso.nome']) linhas.push('⚔️ Adverso: ' + a['processo.adverso.nome']);\n    if (a['processo.tipoAcao'])     linhas.push('📋 Ação: ' + a['processo.tipoAcao']);\n  } else if (a.relativoa === 'OrdemServico') {\n    if (a['ordemServico.numero'])   linhas.push('[📋 OS: ' + a['ordemServico.numero'] + '](https://dj36.datajuri.com.br/app/#/lista/OrdemServico/' + a.ordemServicoId + '?tab=detalhes&area=principal)');\n    if (a['pessoa.nome'])           linhas.push('👤 Cliente: ' + a['pessoa.nome']);\n  } else {\n    if (a['processo.pasta'])        linhas.push('[📁 Processo: ' + a['processo.pasta'] + '](https://dj36.datajuri.com.br/app/#/lista/Processo/' + a.processoId + '?tab=detalhes&area=principal)');\n    if (a['processo.adverso.nome']) linhas.push('⚔️ Adverso: ' + a['processo.adverso.nome']);\n    if (a['pessoa.nome'])           linhas.push('👤 Pessoa: ' + a['pessoa.nome']);\n  }\n  if (a['proprietario.nome']) linhas.push('👩‍💼 Responsável: ' + a['proprietario.nome']);\n  if (a.r)                    linhas.push('👥 Revisor: ' + a.r);\n  if (a.tipoAtividade)        linhas.push('🏷️ Tipo: ' + a.tipoAtividade);\n  if (a.observacao) {\n    linhas.push('');\n    linhas.push('📝 Observação:');\n    linhas.push(a.observacao.substring(0, 800));\n  }\n  if (a.relativoa === 'OrdemServico' && a.listaAndamentoOrdemServicoStr) {\n    linhas.push('');\n    linhas.push('📋 Histórico OS:');\n    linhas.push(a.listaAndamentoOrdemServicoStr.substring(0, 600));\n  }\n  linhas.push('');\n  linhas.push('---');\n  linhas.push('[Source: DataJuri | Module: Atividade | ID: ' + a.id + '](https://dj36.datajuri.com.br/app/#/lista/Compromisso/' + a.id + '?tab=detalhes&area=principal)');\n\n  const desc = linhas.join('\\n');\n  let due = null;\n  if (a.dataPrazoFatal) {\n    const p = a.dataPrazoFatal.split('/');\n    if (p.length === 3) due = p[2] + '-' + p[1] + '-' + p[0] + 'T12:00:00.000Z';\n  }\n  const idLabels = (a.etiquetas || '')\n    .split(',')\n    .map(e => e.trim().toUpperCase())\n    .filter(e => e)\n    .map(e => LABELS[e])\n    .filter(id => id)\n    .join(',');\n  return { json: { name: titulo, desc, due, idLabels } };\n});"
       },
-      "id": "b39b4948-6ed0-4e1c-8576-24fbcc366ed2",
+      "id": "c66089b3-51ff-4f9b-9f4a-7e80662f1b9f",
       "name": "Monta Card",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2240,
-        352
+        -1472,
+        -64
       ]
     },
     {
@@ -195,7 +175,7 @@
           "parameters": [
             {
               "name": "idList",
-              "value": "69bb474647779a97cb6786b4"
+              "value": "69ebf2186ffe931257d2c750"
             },
             {
               "name": "name",
@@ -208,18 +188,22 @@
             {
               "name": "due",
               "value": "={{ $json.due }}"
+            },
+            {
+              "name": "idLabels",
+              "value": "={{ $json.idLabels }}"
             }
           ]
         },
         "options": {}
       },
-      "id": "ffac5ec8-bccd-4c87-b8bf-1c41c04f2e1c",
+      "id": "a9db2538-0f83-4485-a5c4-807d61671ede",
       "name": "Cria Card Trello",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        2464,
-        352
+        -1248,
+        -64
       ],
       "credentials": {
         "trelloApi": {
@@ -232,13 +216,13 @@
       "parameters": {
         "jsCode": "return $input.all().map(item => {\n  const trelloId = item.json.id || '';\n  const desc = item.json.desc || '';\n  const match = desc.match(/ID:\\s*(\\d+)/);\n  const sourceId = match ? match[1] : '';\n  return { json: {\n    source_id: sourceId,\n    assunto: item.json.name || '',\n    trello_card_id: trelloId,\n    criado_em: new Date().toISOString()\n  } };\n});"
       },
-      "id": "faedb4a0-8358-437d-99ce-c4ee730c23ed",
+      "id": "da596b84-d920-47d7-b752-05f7774b61f4",
       "name": "Prepara Registro",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2688,
-        352
+        -1024,
+        -64
       ]
     },
     {
@@ -259,52 +243,81 @@
         },
         "options": {}
       },
-      "id": "323eecfb-4755-4f28-9378-341d10422023",
+      "id": "75bc7872-d4ff-48bd-a58a-889e819ed37e",
       "name": "Registra no DataTable",
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        2912,
-        352
+        -800,
+        -64
       ]
     },
     {
       "parameters": {
         "options": {}
       },
-      "id": "d7c59e3a-92a4-4b8e-828a-4e8c107ba7b6",
+      "id": "3f881d20-379e-4ceb-893d-f0873ae00cea",
       "name": "Loop Over Items1",
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        2032,
-        256
+        -1680,
+        -160
       ]
     },
     {
       "parameters": {},
-      "id": "aebc2404-44ff-4c3e-ba2b-953881a5fe68",
+      "id": "681ddff1-5090-46cb-b295-e4e1623fd770",
       "name": "Teste Manual",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        432,
-        336
+        -3280,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "dataToSave": {
+          "values": [
+            {
+              "key": "cardcriado",
+              "value": "true"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executionData",
+      "typeVersion": 1.1,
+      "position": [
+        -1264,
+        -288
+      ],
+      "id": "31bede2e-604a-4971-9bb7-c82b058161a5",
+      "name": "Execution Data"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 1
+            }
+          ]
+        }
+      },
+      "id": "bab305eb-d950-4f18-a415-6c95c765f8c1",
+      "name": "A cada 1 minuto",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -3264,
+        -272
       ]
     }
   ],
   "connections": {
-    "A cada 30 minutos": {
-      "main": [
-        [
-          {
-            "node": "Auth DataJuri",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Auth DataJuri": {
       "main": [
         [
@@ -365,6 +378,17 @@
         [
           {
             "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Execução": {
+      "main": [
+        [
+          {
+            "node": "Execution Data",
             "type": "main",
             "index": 0
           }
@@ -434,6 +458,17 @@
       ]
     },
     "Teste Manual": {
+      "main": [
+        [
+          {
+            "node": "Auth DataJuri",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "A cada 1 minuto": {
       "main": [
         [
           {
