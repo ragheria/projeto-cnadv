@@ -1,12 +1,17 @@
-FROM mcr.microsoft.com/playwright:v1.60.0-jammy
+ARG PLAYWRIGHT_VERSION=1.60.0
+FROM mcr.microsoft.com/playwright:v${PLAYWRIGHT_VERSION}-jammy
 
 WORKDIR /app
 
-# Não baixa os browsers novamente — já vêm na imagem base
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 
+# Instala express via lockfile
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm ci --omit=dev
+
+# Instala playwright na versão exata da imagem base
+ARG PLAYWRIGHT_VERSION
+RUN npm install --no-save playwright@${PLAYWRIGHT_VERSION}
 
 COPY . .
 

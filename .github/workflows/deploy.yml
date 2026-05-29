@@ -8,6 +8,9 @@ on:
       - "playwright-api/**"
       - ".github/workflows/deploy.yml"
 
+env:
+  PLAYWRIGHT_VERSION: "1.60.0"
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -32,4 +35,4 @@ jobs:
           context: ./playwright-api
           push: true
           tags: ghcr.io/ragheria/cnadv-playwright-api:latest
-
+          build-args: PLAYWRIGHT_VERSION=${{ env.PLAYWRIGHT_VERSION }}
