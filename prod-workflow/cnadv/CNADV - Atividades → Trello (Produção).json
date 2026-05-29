@@ -153,7 +153,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const LABELS = {\n  'SOLIC - CJ': '664209da1dc51400ebd577e4',\n  'EMITIR GUIA': '664209da1dc51400ebd577e5',\n  'REUNIÃO': '664209da1dc51400ebd577e8',\n  'CONCLUÍDO': '66420ac875170ace07bac993',\n  'PRZ - PRAZO': '66420ac975170ace07bacadd',\n  'DEFESA': '66420aca75170ace07bacf8c',\n  'FAZER': '66420aca75170ace07bacfe5',\n  'CANCELADO': '66420aca75170ace07bad017',\n  'NOTIFICAÇÃO': '66420acb75170ace07bad28a',\n  'PROV - PROVIDÊNCIAS': '66420af7e678eb6714cd920a',\n  'PAT - PAUTA JULGAMENTO': '66420b06b6fe85b80bb5da80',\n  'AÇÃO JUDICIAL': '66420b143b71fcec9bbd125e',\n  'URGENTE': '66420b153b71fcec9bbd180c',\n  'BLOQUEIO': '66420c025a3d6d29b804fc13',\n  'GUILHERME': '66420c035a3d6d29b804fde2',\n  'ACOMPANHAMENTO': '66423be843c3ca948514246e',\n  'SEMANAL': '66423c0033a5b93d51c18486',\n  'AUDIÊNCIA': '66475e9034cb06b7480d4655',\n  'UNA': '66475ea8efed752eeda9f0a4',\n  'VIRTUAL': '66475ebec4d8fc8c798a1295',\n  'NEGOCIAÇÃO': '664bbbf100dfb1b8a4b74ef7',\n  'SUSPENSO - AG. DOCS': '66571cccd9999f11ef6d9c17',\n  'RETIRADO DE PAUTA': '665f19f3fa67ff3e0f07b0e0',\n  'IMPORTANTE': '66636a850b7f05a943da214b',\n  'EXCLUSIVO FS': '66684da0ebc97fd9754992ef',\n  'SEM ASSINATURA': '668d7080d41f7e495c91588f',\n  'SEM DOCUMENTOS': '668d70b3547f13e50c3e2fc0',\n  'RELATÓRIO ESPECÍFICO': '66acb90bb36724c724a19e13',\n  'PLANO EMPRESARIAL': '683d9c39267eb39cf023ff15',\n  'CONTRATO': '688222c510c56bf34c41bc6f',\n  'CONSULTA': '68822313cdcec529d0d86196',\n  'SERVIÇO CONSULTIVO': '6882235d71b29969209f4283',\n  'PERÍCIA': '68adefd44f1128d56c852ad6',\n  'PRESENCIAL': '68b1cfddb69905f441bfc6b1',\n  'LEILÃO': '68b85af7121994f4f3bbbd6c',\n  'SUSPENSÃO RECESSO': '694430c2e17e1d90c59c7432',\n  'EXEC. MIGUEL': '6978327eb0d0a0a4a1cd3d8e',\n  'EXEC. RENATA': '6978328b96ac01ac3dc1971b',\n  'DIL - DILIGÊNCIAS': '69b98edff12b9016381bbc9c',\n};\nreturn $input.all().map(item => {\n  const a = item.json;\n  const titulo = a.assunto || 'Sem assunto';\n\n  const linhas = [];\n  if (a.relativoa === 'Processo') {\n    if (a['processo.pasta'])        linhas.push('[📁 Processo: ' + a['processo.pasta'] + '](https://dj36.datajuri.com.br/app/#/lista/Processo/' + a.processoId + '?tab=detalhes&area=principal)');\n    if (a['processo.cliente.nome']) linhas.push('👤 Cliente: ' + a['processo.cliente.nome']);\n    if (a['processo.adverso.nome']) linhas.push('⚔️ Adverso: ' + a['processo.adverso.nome']);\n    if (a['processo.tipoAcao'])     linhas.push('📋 Ação: ' + a['processo.tipoAcao']);\n  } else if (a.relativoa === 'OrdemServico') {\n    if (a['ordemServico.numero'])   linhas.push('[📋 OS: ' + a['ordemServico.numero'] + '](https://dj36.datajuri.com.br/app/#/lista/OrdemServico/' + a.ordemServicoId + '?tab=detalhes&area=principal)');\n    if (a['pessoa.nome'])           linhas.push('👤 Cliente: ' + a['pessoa.nome']);\n  } else {\n    if (a['processo.pasta'])        linhas.push('[📁 Processo: ' + a['processo.pasta'] + '](https://dj36.datajuri.com.br/app/#/lista/Processo/' + a.processoId + '?tab=detalhes&area=principal)');\n    if (a['processo.adverso.nome']) linhas.push('⚔️ Adverso: ' + a['processo.adverso.nome']);\n    if (a['pessoa.nome'])           linhas.push('👤 Pessoa: ' + a['pessoa.nome']);\n  }\n  if (a['proprietario.nome']) linhas.push('👩‍💼 Responsável: ' + a['proprietario.nome']);\n  if (a.r)                    linhas.push('👥 Revisor: ' + a.r);\n  if (a.tipoAtividade)        linhas.push('🏷️ Tipo: ' + a.tipoAtividade);\n  if (a.observacao) {\n    linhas.push('');\n    linhas.push('📝 Observação:');\n    linhas.push(a.observacao.substring(0, 800));\n  }\n  if (a.relativoa === 'OrdemServico' && a.listaAndamentoOrdemServicoStr) {\n    linhas.push('');\n    linhas.push('📋 Histórico OS:');\n    linhas.push(a.listaAndamentoOrdemServicoStr.substring(0, 600));\n  }\n  linhas.push('');\n  linhas.push('---');\n  linhas.push('[Source: DataJuri | Module: Atividade | ID: ' + a.id + '](https://dj36.datajuri.com.br/app/#/lista/Compromisso/' + a.id + '?tab=detalhes&area=principal)');\n\n  const desc = linhas.join('\\n');\n  let due = null;\n  if (a.dataPrazoFatal) {\n    const p = a.dataPrazoFatal.split('/');\n    if (p.length === 3) due = p[2] + '-' + p[1] + '-' + p[0] + 'T12:00:00.000Z';\n  }\n  const idLabels = (a.etiquetas || '')\n    .split(',')\n    .map(e => e.trim().toUpperCase())\n    .filter(e => e)\n    .map(e => LABELS[e])\n    .filter(id => id)\n    .join(',');\n  return { json: { name: titulo, desc, due, idLabels } };\n});"
+        "jsCode": "const MEMBERS = {\n  'Renata da Silva Penna': '6642354d61968e43b9480c53',\n  'Miguel Gid Rolim de Moura Moreira': '68af16fc62cf60db6ffcc762',\n  'Lucas Marcos Cardoso de Oliveira': '687e20529f04cede3dbd46bd',\n  'Pedro Nascimento': '65d4d5a8d2e91b3b116105ea',\n  'Paula Chrispim': '650cbb3bd26b9433fc7ea9fb',\n};\nconst LABELS = {\n  'SOLIC - CJ': '664209da1dc51400ebd577e4',\n  'EMITIR GUIA': '664209da1dc51400ebd577e5',\n  'REUNIÃO': '664209da1dc51400ebd577e8',\n  'CONCLUÍDO': '66420ac875170ace07bac993',\n  'PRZ - PRAZO': '66420ac975170ace07bacadd',\n  'DEFESA': '66420aca75170ace07bacf8c',\n  'FAZER': '66420aca75170ace07bacfe5',\n  'CANCELADO': '66420aca75170ace07bad017',\n  'NOTIFICAÇÃO': '66420acb75170ace07bad28a',\n  'PROV - PROVIDÊNCIAS': '66420af7e678eb6714cd920a',\n  'PAT - PAUTA JULGAMENTO': '66420b06b6fe85b80bb5da80',\n  'AÇÃO JUDICIAL': '66420b143b71fcec9bbd125e',\n  'URGENTE': '66420b153b71fcec9bbd180c',\n  'BLOQUEIO': '66420c025a3d6d29b804fc13',\n  'GUILHERME': '66420c035a3d6d29b804fde2',\n  'ACOMPANHAMENTO': '66423be843c3ca948514246e',\n  'SEMANAL': '66423c0033a5b93d51c18486',\n  'AUDIÊNCIA': '66475e9034cb06b7480d4655',\n  'UNA': '66475ea8efed752eeda9f0a4',\n  'VIRTUAL': '66475ebec4d8fc8c798a1295',\n  'NEGOCIAÇÃO': '664bbbf100dfb1b8a4b74ef7',\n  'SUSPENSO - AG. DOCS': '66571cccd9999f11ef6d9c17',\n  'RETIRADO DE PAUTA': '665f19f3fa67ff3e0f07b0e0',\n  'IMPORTANTE': '66636a850b7f05a943da214b',\n  'EXCLUSIVO FS': '66684da0ebc97fd9754992ef',\n  'SEM ASSINATURA': '668d7080d41f7e495c91588f',\n  'SEM DOCUMENTOS': '668d70b3547f13e50c3e2fc0',\n  'RELATÓRIO ESPECÍFICO': '66acb90bb36724c724a19e13',\n  'PLANO EMPRESARIAL': '683d9c39267eb39cf023ff15',\n  'CONTRATO': '688222c510c56bf34c41bc6f',\n  'CONSULTA': '68822313cdcec529d0d86196',\n  'SERVIÇO CONSULTIVO': '6882235d71b29969209f4283',\n  'PERÍCIA': '68adefd44f1128d56c852ad6',\n  'PRESENCIAL': '68b1cfddb69905f441bfc6b1',\n  'LEILÃO': '68b85af7121994f4f3bbbd6c',\n  'SUSPENSÃO RECESSO': '694430c2e17e1d90c59c7432',\n  'EXEC. MIGUEL': '6978327eb0d0a0a4a1cd3d8e',\n  'EXEC. RENATA': '6978328b96ac01ac3dc1971b',\n  'DIL - DILIGÊNCIAS': '69b98edff12b9016381bbc9c',\n};\nreturn $input.all().map(item => {\n  const a = item.json;\n  const titulo = a.assunto || 'Sem assunto';\n\n  const linhas = [];\n  if (a.dataPrazoFatal)       linhas.push('**⏰ Prazo Fatal: ' + a.dataPrazoFatal + '**');\n  if (a.relativoa === 'Processo') {\n    if (a['processo.pasta'])        linhas.push('[📁 Processo: ' + a['processo.pasta'] + '](https://dj36.datajuri.com.br/app/#/lista/Processo/' + a.processoId + '?tab=detalhes&area=principal)');\n    if (a['processo.cliente.nome']) linhas.push('👤 Cliente: ' + a['processo.cliente.nome']);\n    if (a['processo.adverso.nome']) linhas.push('⚔️ Adverso: ' + a['processo.adverso.nome']);\n    if (a['processo.tipoAcao'])     linhas.push('📋 Ação: ' + a['processo.tipoAcao']);\n  } else if (a.relativoa === 'OrdemServico') {\n    if (a['ordemServico.numero'])   linhas.push('[📋 OS: ' + a['ordemServico.numero'] + '](https://dj36.datajuri.com.br/app/#/lista/OrdemServico/' + a.ordemServicoId + '?tab=detalhes&area=principal)');\n    if (a['pessoa.nome'])           linhas.push('👤 Cliente: ' + a['pessoa.nome']);\n  } else {\n    if (a['processo.pasta'])        linhas.push('[📁 Processo: ' + a['processo.pasta'] + '](https://dj36.datajuri.com.br/app/#/lista/Processo/' + a.processoId + '?tab=detalhes&area=principal)');\n    if (a['processo.adverso.nome']) linhas.push('⚔️ Adverso: ' + a['processo.adverso.nome']);\n    if (a['pessoa.nome'])           linhas.push('👤 Pessoa: ' + a['pessoa.nome']);\n  }\n  if (a['proprietario.nome']) linhas.push('👩‍💼 Responsável: ' + a['proprietario.nome']);\n  if (a.r)                    linhas.push('👥 Revisor: ' + a.r);\n  if (a.tipoAtividade)        linhas.push('🏷️ Tipo: ' + a.tipoAtividade);\n  if (a.observacao) {\n    linhas.push('');\n    linhas.push('📝 Observação:');\n    linhas.push(a.observacao.substring(0, 800));\n  }\n  if (a.relativoa === 'OrdemServico' && a.listaAndamentoOrdemServicoStr) {\n    linhas.push('');\n    linhas.push('📋 Histórico OS:');\n    linhas.push(a.listaAndamentoOrdemServicoStr.substring(0, 600));\n  }\n  linhas.push('');\n  linhas.push('---');\n  linhas.push('[Source: DataJuri | Module: Atividade | ID: ' + a.id + '](https://dj36.datajuri.com.br/app/#/lista/Compromisso/' + a.id + '?tab=detalhes&area=principal)');\n\n  const desc = linhas.join('\\n');\n\n  function parseBR(str) {\n    const p = (str || '').split('/');\n    if (p.length !== 3) return null;\n    return new Date(Date.UTC(+p[2], +p[1] - 1, +p[0], 18, 0, 0));\n  }\n  function addBizDays(date, n) {\n    const d = new Date(date);\n    const dir = n >= 0 ? 1 : -1;\n    let rem = Math.abs(n);\n    while (rem > 0) {\n      d.setUTCDate(d.getUTCDate() + dir);\n      const dow = d.getUTCDay();\n      if (dow !== 0 && dow !== 6) rem--;\n    }\n    return d;\n  }\n\n  const isPrazo = a.tipoAtividade === 'Compromisso (Prazo)';\n  let due = null;\n  let start = null;\n\n  if (a.dataPrazoFatal) {\n    const fatalDate = parseBR(a.dataPrazoFatal);\n    if (fatalDate) {\n      due = isPrazo\n        ? addBizDays(fatalDate, -2).toISOString()\n        : fatalDate.toISOString();\n    }\n  }\n  if (isPrazo && a.observacao) {\n    const m = a.observacao.match(/Data de disponibilização:\\s*(\\d{2}\\/\\d{2}\\/\\d{4})/);\n    if (m) {\n      const dispDate = parseBR(m[1]);\n      if (dispDate) start = addBizDays(dispDate, 2).toISOString();\n    }\n  }\n\n  const idLabels = (a.etiquetas || '')\n    .split(',')\n    .map(e => e.trim().toUpperCase())\n    .filter(e => e)\n    .map(e => LABELS[e])\n    .filter(id => id)\n    .join(',');\n  const memberIds = [a['proprietario.nome'], a.r]\n    .filter(n => n)\n    .map(n => MEMBERS[n])\n    .filter(id => id);\n  const idMembers = [...new Set(memberIds)].join(',');\n  return { json: { name: titulo, desc, due, start, idLabels, idMembers } };\n});"
       },
       "id": "c66089b3-51ff-4f9b-9f4a-7e80662f1b9f",
       "name": "Monta Card",
@@ -192,6 +192,14 @@
             {
               "name": "idLabels",
               "value": "={{ $json.idLabels }}"
+            },
+            {
+              "name": "idMembers",
+              "value": "={{ $json.idMembers }}"
+            },
+            {
+              "name": "start",
+              "value": "={{ $json.start }}"
             }
           ]
         },
@@ -315,6 +323,71 @@
         -3264,
         -272
       ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ \"https://api.trello.com/1/cards/\" + $json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "trelloApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "start",
+              "value": "={{ $(\"Monta Card\").first().json.start }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b1c2d3e4-f5a6-7890-abcd-ef1234567890",
+      "name": "Atualiza Start Trello",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -1136,
+        -64
+      ],
+      "credentials": {
+        "trelloApi": {
+          "id": "yV2Whs8Z7g7gCMOM",
+          "name": "Trello-ragheria"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-start",
+              "leftValue": "={{ $(\"Monta Card\").first().json.start }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-e5f6-7890-abcd-ef0987654321",
+      "name": "Tem Start?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1248,
+        80
+      ]
     }
   ],
   "connections": {
@@ -410,7 +483,7 @@
       "main": [
         [
           {
-            "node": "Prepara Registro",
+            "node": "Tem Start?",
             "type": "main",
             "index": 0
           }
@@ -473,6 +546,35 @@
         [
           {
             "node": "Auth DataJuri",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualiza Start Trello": {
+      "main": [
+        [
+          {
+            "node": "Prepara Registro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tem Start?": {
+      "main": [
+        [
+          {
+            "node": "Atualiza Start Trello",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepara Registro",
             "type": "main",
             "index": 0
           }

@@ -1,4 +1,33 @@
-*
-!.gitignore
-!prod-workflow/
-!prod-workflow/**
+# Arquivos temporários / exploração
+arquivomorto.json
+todosos campos.json
+exemplo_concluido.json
+
+# Claude Code (settings locais)
+.claude/
+
+# One-time scripts (já executados)
+one-time/
+
+# DataJuri — respostas brutas de API
+docs/datajuri/*.json
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Variáveis de ambiente
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

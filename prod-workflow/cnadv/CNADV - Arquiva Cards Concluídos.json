@@ -1,0 +1,189 @@
+{
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "60f09b1b-4baf-40ba-9a54-262bf73a08d2",
+      "name": "Teste Manual",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2656,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.trello.com/1/lists/650e05d03d93b8e105a69f68/cards",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "trelloApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "id,name,due,dueComplete,idList,idLabels,idMembers"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "12b1a386-96ca-4fa5-bdfb-c90a84416596",
+      "name": "GET Cards CONCLUÍDO",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -2432,
+        416
+      ],
+      "credentials": {
+        "trelloApi": {
+          "id": "yV2Whs8Z7g7gCMOM",
+          "name": "Trello-ragheria"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const LISTAS_ARQUIVO = {\n  '2023': '6a18a686a9179ebced4aca12',\n  '2024': '6a18a68eeab9ae9fb6c5269e',\n  '2025': '6a0f40d65f987a12e465ffb5'\n};\nconst anoAtual = 2026;\nconst raw = $input.first().json;\nconst cards = Array.isArray(raw) ? raw : $input.all().map(i => i.json);\nconst resultado = [];\nfor (const card of cards) {\n  if (!card.due) continue;\n  const ano = String(new Date(card.due).getUTCFullYear());\n  if (Number(ano) >= anoAtual) continue;\n  const idList = LISTAS_ARQUIVO[ano];\n  if (!idList) {\n    console.log('Lista não mapeada para ' + ano + ' (card: ' + card.name + ')');\n    continue;\n  }\n  resultado.push({ json: { cardId: card.id, cardName: card.name, idList, ano } });\n}\nif (resultado.length === 0) return [];\nconsole.log('Cards para arquivar: ' + resultado.length);\nreturn resultado;"
+      },
+      "id": "a9bd7cc4-22c8-45bd-8f5f-7bda2ed7a8ee",
+      "name": "Filtra e Associa Lista",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2208,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "f1e44e82-52b4-4546-96e0-257749274a98",
+      "name": "Loop Mover Cards",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -1984,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ \"https://api.trello.com/1/cards/\" + $json.cardId }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "trelloApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "idBoard",
+              "value": "6a0f23a5591a89676991c6e9"
+            },
+            {
+              "name": "idList",
+              "value": "={{ $json.idList }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f098c00c-af61-41d1-b828-e7aa435ced40",
+      "name": "Move Card p/ Arquivo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -1760,
+        496
+      ],
+      "credentials": {
+        "trelloApi": {
+          "id": "yV2Whs8Z7g7gCMOM",
+          "name": "Trello-ragheria"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const total = $input.all().length;\nconsole.log('Arquivamento concluído: ' + total + ' cards movidos em ' + new Date().toISOString());\nreturn [{ json: { status: 'concluido', totalArquivados: total, timestamp: new Date().toISOString() } }];"
+      },
+      "id": "e380f749-9b0b-4c27-930e-d24bd374e2b8",
+      "name": "Log Final",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1760,
+        256
+      ]
+    }
+  ],
+  "connections": {
+    "Teste Manual": {
+      "main": [
+        [
+          {
+            "node": "GET Cards CONCLUÍDO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET Cards CONCLUÍDO": {
+      "main": [
+        [
+          {
+            "node": "Filtra e Associa Lista",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filtra e Associa Lista": {
+      "main": [
+        [
+          {
+            "node": "Loop Mover Cards",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Mover Cards": {
+      "main": [
+        [
+          {
+            "node": "Log Final",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Move Card p/ Arquivo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Move Card p/ Arquivo": {
+      "main": [
+        [
+          {
+            "node": "Loop Mover Cards",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "instanceId": "ba581e89662ad86916995065c64c89059e388688506b3ce260ed3ec7252352d8"
+  }
+}
