@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   api:
-    image: ghcr.io/ragheria/cnadv-playwright-api:latest
+    image: ghcr.io/ragheria/cnadv-playwright-api:${PLAYWRIGHT_VERSION:-latest}
     environment:
       - DATAJURI_EMAIL=${DATAJURI_EMAIL}
       - DATAJURI_PASSWORD=${DATAJURI_PASSWORD}

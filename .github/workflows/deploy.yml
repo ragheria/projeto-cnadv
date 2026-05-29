@@ -34,5 +34,7 @@ jobs:
         with:
           context: ./playwright-api
           push: true
-          tags: ghcr.io/ragheria/cnadv-playwright-api:latest
+          tags: |
+            ghcr.io/ragheria/cnadv-playwright-api:latest
+            ghcr.io/ragheria/cnadv-playwright-api:${{ env.PLAYWRIGHT_VERSION }}
           build-args: PLAYWRIGHT_VERSION=${{ env.PLAYWRIGHT_VERSION }}
